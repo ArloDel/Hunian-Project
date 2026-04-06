@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffaf2;
+  --foreground: #1f1d1a;
+  --card: rgba(255, 255, 255, 0.82);
+  --card-foreground: #1f1d1a;
+  --muted: #f3e5cf;
+  --muted-foreground: #6d614f;
+  --primary: #bb5a2b;
+  --primary-foreground: #fff8f0;
+  --secondary: #254f45;
+  --secondary-foreground: #eff8f4;
+  --accent: #f0c77b;
+  --accent-foreground: #392814;
+  --border: rgba(92, 65, 41, 0.15);
+  --ring: rgba(187, 90, 43, 0.35);
+  --shadow-soft: 0 24px 80px rgba(86, 57, 36, 0.12);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --font-sans: "Segoe UI Variable", "Trebuchet MS", "Gill Sans", sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Segoe UI Variable", "Trebuchet MS", "Gill Sans", sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(240, 199, 123, 0.28), transparent 28%),
+    radial-gradient(circle at right 10% top 20%, rgba(37, 79, 69, 0.12), transparent 22%),
+    linear-gradient(180deg, #fffaf2 0%, #fff7ec 38%, #f8efe0 100%);
+}
+
+::selection {
+  background: rgba(187, 90, 43, 0.18);
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.glass-card {
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-soft);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(109, 97, 79, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109, 97, 79, 0.08) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
