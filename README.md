@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hunian Mahmudah
 
-## Getting Started
+Hunian Mahmudah adalah web app pemesanan kost dan kontrakan berbasis `Next.js` yang sudah dilengkapi frontend modern, backend API route handlers, autentikasi `Better Auth`, dan ORM `Drizzle` dengan `MySQL`.
 
-First, run the development server:
+## Stack
+
+- `Next.js 16` App Router
+- `React 19`
+- `Tailwind CSS 4`
+- `shadcn-style reusable UI components`
+- `Better Auth`
+- `Drizzle ORM`
+- `MySQL`
+
+## Fitur Yang Sudah Ada
+
+- Landing page katalog hunian
+- Halaman login dan register
+- Session-aware header
+- Form booking yang terhubung ke backend
+- Riwayat booking user
+- Dashboard owner dengan data live
+- API untuk auth, units, bookings, health check, dan owner dashboard
+- Seed data demo untuk owner, tenant, unit, dan booking
+
+## Struktur Penting
+
+- `src/app` : routing halaman dan API route handlers
+- `src/components` : komponen UI dan komponen halaman
+- `src/db` : schema Drizzle, koneksi database, dan seed
+- `src/lib` : auth, helper API, env parser, validator
+- `drizzle.config.ts` : konfigurasi Drizzle Kit
+
+## Persiapan Local Development
+
+1. Pastikan MySQL lokal aktif.
+2. File `.env` sudah tersedia di root project.
+3. Sesuaikan nilai berikut bila perlu:
+
+```env
+DATABASE_HOST=localhost
+DATABASE_PORT=3306
+DATABASE_USER=root
+DATABASE_PASSWORD=
+DATABASE_NAME=hunian_mahmudah
+
+BETTER_AUTH_SECRET=your-secret
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+## Install Dan Jalankan
+
+```bash
+npm install
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+App akan berjalan di:
+
+[http://localhost:3000](http://localhost:3000)
+
+## Akun Demo
+
+- Owner:
+  - Email: `owner@hunian.test`
+  - Password: `Owner12345!`
+- Tenant:
+  - Email: `tenant@hunian.test`
+  - Password: `Tenant12345!`
+
+## Script Yang Tersedia
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+npm run start
+npm run lint
+npm run db:generate
+npm run db:push
+npm run db:studio
+npm run db:seed
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database Tools
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Untuk melihat database dengan Drizzle Studio:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run db:studio
+```
 
-## Learn More
+Lalu buka:
 
-To learn more about Next.js, take a look at the following resources:
+[https://local.drizzle.studio](https://local.drizzle.studio)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Endpoint API Utama
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `GET /api/health`
+- `GET /api/me`
+- `GET /api/auth/session`
+- `GET/POST /api/units`
+- `GET/PATCH/DELETE /api/units/:unitId`
+- `GET/POST /api/bookings`
+- `GET/PATCH /api/bookings/:bookingId`
+- `GET /api/owner/dashboard`
 
-## Deploy on Vercel
+## Catatan
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- File `.env` tidak di-commit ke repository.
+- Untuk login dan booking, backend harus sudah terhubung ke MySQL.
+- Jika ingin deploy, sesuaikan `BETTER_AUTH_URL` dan `NEXT_PUBLIC_APP_URL` dengan domain production.
