@@ -16,6 +16,7 @@ import {
   Wifi,
 } from "lucide-react";
 
+import type { CatalogUnit } from "@/lib/catalog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,36 +29,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SiteHeader } from "@/components/site/site-header";
-
-const featuredUnits = [
-  {
-    name: "Kost Anggrek Premium",
-    type: "Kost Putri",
-    location: "Lowokwaru, Malang",
-    price: "Rp1.850.000/bulan",
-    status: "Tersedia 3 kamar",
-    highlight: "WiFi 100 Mbps, AC, KM dalam, laundry mingguan",
-    color: "from-[#f6d4a5] via-[#fbead2] to-[#fff8ef]",
-  },
-  {
-    name: "Studio Mahmudah Residence",
-    type: "Kontrakan Mini",
-    location: "Sumbersari, Malang",
-    price: "Rp2.700.000/bulan",
-    status: "Tersedia 1 unit",
-    highlight: "Parkir motor luas, pantry, smart lock, area kerja",
-    color: "from-[#b9ddd0] via-[#e7f5ef] to-[#fff9ee]",
-  },
-  {
-    name: "Kamar Executive Aluna",
-    type: "Kost Campur",
-    location: "Dinoyo, Malang",
-    price: "Rp1.550.000/bulan",
-    status: "Booking ramai minggu ini",
-    highlight: "Akses 24 jam, kasur queen, water heater, CCTV",
-    color: "from-[#d9c1ff] via-[#f6edff] to-[#fff8ef]",
-  },
-];
 
 const steps = [
   {
@@ -93,7 +64,37 @@ const facilities = [
   { label: "Booking fleksibel", icon: CalendarDays },
 ];
 
-export function HomePage() {
+function formatCurrency(value: string) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+function getUnitTypeLabel(type: CatalogUnit["type"]) {
+  return type === "kost" ? "Kost" : "Kontrakan";
+}
+
+function getAvailabilityLabel(unit: CatalogUnit) {
+  if (unit.availableRooms > 1) {
+    return `Tersedia ${unit.availableRooms} unit`;
+  }
+
+  if (unit.availableRooms === 1) {
+    return "Tersisa 1 unit";
+  }
+
+  return "Sedang penuh";
+}
+
+function getCatalogPreview(units: CatalogUnit[]) {
+  return units.slice(0, 3);
+}
+
+export function HomePage({ units }: { units: CatalogUnit[] }) {
+  const featuredUnits = getCatalogPreview(units);
+
   return (
     <main className="relative overflow-hidden">
       <section className="hero-grid relative">
@@ -123,7 +124,7 @@ export function HomePage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="/owner">Lihat Dashboard Owner</Link>
+                  <Link href="/katalog">Lihat Semua Katalog</Link>
                 </Button>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
@@ -148,17 +149,19 @@ export function HomePage() {
                     <Badge className="bg-white/16 text-white" variant="outline">
                       Featured Stay
                     </Badge>
-                    <span className="text-sm text-white/80">Mulai dari Rp1,5 jt</span>
+                    <span className="text-sm text-white/80">
+                      {featuredUnits[0] ? `${formatCurrency(featuredUnits[0].price)}/bulan` : "Mulai dari Rp1,5 jt"}
+                    </span>
                   </div>
                   <div className="space-y-4">
                     <div className="rounded-[28px] border border-white/15 bg-white/10 p-5">
                       <p className="text-sm text-white/75">Unit paling dicari minggu ini</p>
                       <h2 className="mt-2 text-2xl font-semibold">
-                        Kost Anggrek Premium
+                        {featuredUnits[0]?.name ?? "Katalog sedang disiapkan"}
                       </h2>
                       <p className="mt-3 max-w-sm text-sm leading-6 text-white/75">
-                        Cocok untuk mahasiswa dan pekerja yang ingin akses cepat ke
-                        kampus, kuliner, dan transportasi kota.
+                        {featuredUnits[0]?.description ??
+                          "Unit akan tampil otomatis dari database begitu katalog aktif di dashboard owner."}
                       </p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -176,8 +179,8 @@ export function HomePage() {
                 </div>
                 <div className="grid gap-4 p-6 sm:grid-cols-2 sm:p-8">
                   <div>
-                    <p className="text-sm text-muted-foreground">Status booking</p>
-                    <p className="mt-2 text-xl font-semibold">17 check-in pekan ini</p>
+                    <p className="text-sm text-muted-foreground">Status katalog</p>
+                    <p className="mt-2 text-xl font-semibold">{units.length} unit dipublikasikan</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Notifikasi aktif</p>
@@ -197,60 +200,83 @@ export function HomePage() {
               Katalog Unit
             </Badge>
             <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">
-              Tampilan katalog yang menenangkan, tapi tetap fokus ke keputusan booking.
+              Katalog beranda sekarang memakai data live dari database.
             </h2>
             <p className="text-muted-foreground">
-              Desain frontend ini dibuat mobile-first, transparan untuk harga dan
-              fasilitas, serta sudah menyiapkan blok informasi yang nanti mudah dihubungkan
-              ke backend dan payment flow.
+              Unit di bawah ini tidak lagi hardcode. Data nama, harga, fasilitas, lokasi,
+              dan status ketersediaan diambil langsung dari tabel `units`.
             </p>
           </div>
           <Card className="rounded-[28px]">
             <CardContent className="grid gap-3 p-4 sm:grid-cols-4">
-              <Input placeholder="Cari lokasi" defaultValue="Malang" />
-              <Input placeholder="Budget maks." defaultValue="Rp2.500.000" />
-              <Input placeholder="Tipe unit" defaultValue="Kost / Kontrakan" />
-              <Button className="w-full">Terapkan Filter</Button>
+              <Input placeholder="Cari lokasi" defaultValue="Malang" readOnly />
+              <Input placeholder="Budget maks." defaultValue="Rp2.500.000" readOnly />
+              <Input placeholder="Tipe unit" defaultValue="Kost / Kontrakan" readOnly />
+              <Button asChild className="w-full">
+                <Link href="/katalog">Lihat katalog lengkap</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
-          {featuredUnits.map((unit) => (
-            <Card key={unit.name} className="overflow-hidden rounded-[30px]">
-              <CardContent className="p-0">
-                <div className={`h-52 bg-gradient-to-br ${unit.color} p-6`}>
-                  <div className="flex h-full flex-col justify-between rounded-[24px] border border-white/60 bg-white/30 p-5">
-                    <Badge variant="outline" className="w-fit bg-white/70">
-                      {unit.type}
-                    </Badge>
-                    <div>
-                      <p className="text-sm text-muted-foreground">{unit.location}</p>
-                      <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-                        {unit.name}
-                      </h3>
+        {featuredUnits.length ? (
+          <div className="grid gap-5 lg:grid-cols-3">
+            {featuredUnits.map((unit) => (
+              <Card key={unit.id} className="overflow-hidden rounded-[30px]">
+                <CardContent className="p-0">
+                  <div className="h-52 bg-gradient-to-br from-[#f6d4a5] via-[#fbead2] to-[#fff8ef] p-6">
+                    <div className="flex h-full flex-col justify-between rounded-[24px] border border-white/60 bg-white/30 p-5">
+                      <Badge variant="outline" className="w-fit bg-white/70">
+                        {getUnitTypeLabel(unit.type)}
+                      </Badge>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{unit.location}</p>
+                        <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+                          {unit.name}
+                        </h3>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-4 p-6">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-lg font-semibold">{unit.price}</span>
-                    <Badge variant="accent">{unit.status}</Badge>
+                  <div className="space-y-4 p-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-lg font-semibold">
+                        {formatCurrency(unit.price)}/bulan
+                      </span>
+                      <Badge variant={unit.availableRooms > 0 ? "accent" : "secondary"}>
+                        {getAvailabilityLabel(unit)}
+                      </Badge>
+                    </div>
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      {unit.description ?? "Unit ini sudah siap untuk ditinjau lebih lanjut dari katalog lengkap."}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {unit.facilities.slice(0, 3).map((facility) => (
+                        <Badge key={facility} variant="outline">
+                          {facility}
+                        </Badge>
+                      ))}
+                    </div>
+                    <Button asChild className="w-full">
+                      <Link href="/katalog">Lihat Detail & Booking</Link>
+                    </Button>
                   </div>
-                  <p className="text-sm leading-6 text-muted-foreground">{unit.highlight}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">WiFi</Badge>
-                    <Badge variant="outline">AC</Badge>
-                    <Badge variant="outline">Kamar mandi dalam</Badge>
-                  </div>
-                  <Button asChild className="w-full">
-                    <Link href="/booking">Lihat Detail & Booking</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="rounded-[30px]">
+            <CardContent className="space-y-3 p-8">
+              <Badge variant="secondary" className="w-fit">
+                Belum ada unit
+              </Badge>
+              <h3 className="text-2xl font-semibold">Katalog akan tampil otomatis setelah owner menambah unit.</h3>
+              <p className="text-muted-foreground">
+                Setelah unit dibuat dari dashboard owner, beranda dan halaman katalog lengkap akan ikut terisi.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </section>
 
       <section id="booking" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14">
@@ -306,7 +332,10 @@ export function HomePage() {
                 <Input placeholder="No. WhatsApp" />
                 <Input placeholder="Tanggal masuk" type="date" />
                 <Input placeholder="Durasi sewa" defaultValue="6 bulan" />
-                <Input placeholder="Pilihan unit" defaultValue="Kost Anggrek Premium" />
+                <Input
+                  placeholder="Pilihan unit"
+                  defaultValue={featuredUnits[0]?.name ?? "Pilih unit dari katalog"}
+                />
               </div>
               <Card className="rounded-[24px] border-dashed">
                 <CardContent className="grid gap-4 p-5 sm:grid-cols-3">
@@ -325,9 +354,11 @@ export function HomePage() {
                 </CardContent>
               </Card>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button className="flex-1">Lanjutkan Booking</Button>
-                <Button variant="outline" className="flex-1">
-                  Simpan Sebagai Draft
+                <Button asChild className="flex-1">
+                  <Link href="/booking">Lanjutkan Booking</Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/katalog">Cek Katalog Lengkap</Link>
                 </Button>
               </div>
               <div className="rounded-[24px] bg-muted/75 p-4 text-sm leading-6 text-muted-foreground">
@@ -479,6 +510,7 @@ export function HomePage() {
         <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>Hunian Mahmudah dibuat sebagai fondasi frontend untuk platform pemesanan kost yang modern.</p>
           <div className="flex gap-4">
+            <Link href="/katalog">Katalog</Link>
             <Link href="/booking">Booking</Link>
             <Link href="/owner">Dashboard Owner</Link>
           </div>
