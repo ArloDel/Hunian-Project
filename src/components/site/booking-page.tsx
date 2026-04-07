@@ -9,6 +9,7 @@ import {
   FileImage,
   LoaderCircle,
   ShieldCheck,
+  Upload,
   Wallet,
 } from "lucide-react";
 
@@ -36,6 +37,8 @@ type BookingRecord = {
   totalPrice: string;
   status: string;
   paymentStatus: string;
+  paymentProofUrl: string | null;
+  roomNumber: string | null;
   unit: {
     name: string;
     location?: string;
@@ -62,6 +65,8 @@ export function BookingPage() {
   const [isLoadingUnits, setIsLoadingUnits] = useState(true);
   const [bookingHistory, setBookingHistory] = useState<BookingRecord[]>([]);
   const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+  const [isUploadingKtp, setIsUploadingKtp] = useState(false);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
 
   useEffect(() => {
     const loadUnits = async () => {
@@ -86,15 +91,6 @@ export function BookingPage() {
 
     loadUnits();
   }, []);
-
-  useEffect(() => {
-    if (session?.user) {
-      setForm((current) => ({
-        ...current,
-        phoneNumber: current.phoneNumber,
-      }));
-    }
-  }, [session]);
 
   useEffect(() => {
     const loadBookings = async () => {
@@ -140,6 +136,62 @@ export function BookingPage() {
       ...current,
       [key]: value,
     }));
+  };
+
+  const uploadSingleFile = async (
+    file: File,
+    kind: "ktp" | "payment-proof",
+  ) => {
+    const formData = new FormData();
+    formData.append("kind", kind);
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Upload file gagal.");
+    }
+
+    return payload.data.url as string;
+  };
+
+  const handleFileUpload = async (
+    fileList: FileList | null,
+    kind: "ktp" | "payment-proof",
+  ) => {
+    const file = fileList?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      if (kind === "ktp") {
+        setIsUploadingKtp(true);
+      } else {
+        setIsUploadingProof(true);
+      }
+
+      const url = await uploadSingleFile(file, kind);
+
+      if (kind === "ktp") {
+        handleChange("ktpImageUrl", url);
+      } else {
+        handleChange("paymentProofUrl", url);
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Upload file gagal.");
+    } finally {
+      if (kind === "ktp") {
+        setIsUploadingKtp(false);
+      } else {
+        setIsUploadingProof(false);
+      }
+    }
   };
 
   const handleBooking = async () => {
@@ -218,7 +270,7 @@ Silakan tunggu verifikasi owner.`,
           </Badge>
           <h1 className="font-serif text-4xl tracking-tight">Amankan unit sebelum keduluan.</h1>
           <p className="max-w-2xl text-muted-foreground">
-            Form ini sekarang sudah tersambung ke session auth dan endpoint booking.
+            Booking tenant sekarang mendukung upload file nyata untuk KTP dan bukti transfer.
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -239,8 +291,7 @@ Silakan tunggu verifikasi owner.`,
           <CardHeader>
             <CardTitle>Form data penyewa</CardTitle>
             <CardDescription>
-              Data booking akan dikirim ke backend. Saat login, booking akan otomatis terhubung
-              ke akun Anda.
+              Data booking akan dikirim ke backend, dan dokumen diunggah ke folder lokal proyek.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -253,11 +304,7 @@ Silakan tunggu verifikasi owner.`,
                 onChange={(event) => handleChange("phoneNumber", event.target.value)}
               />
               <Input
-                placeholder="Link foto KTP"
-                value={form.ktpImageUrl}
-                onChange={(event) => handleChange("ktpImageUrl", event.target.value)}
-              />
-              <Input
+                placeholder="Tanggal masuk"
                 type="date"
                 value={form.checkInDate}
                 onChange={(event) => handleChange("checkInDate", event.target.value)}
@@ -266,8 +313,6 @@ Silakan tunggu verifikasi owner.`,
                 value={form.durationMonths}
                 onChange={(event) => handleChange("durationMonths", event.target.value)}
               />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
               <select
                 className="flex h-11 w-full rounded-2xl border border-border bg-white/75 px-4 py-2 text-sm outline-none"
                 value={form.unitId}
@@ -279,11 +324,6 @@ Silakan tunggu verifikasi owner.`,
                   </option>
                 ))}
               </select>
-              <Input
-                placeholder="Link bukti transfer"
-                value={form.paymentProofUrl}
-                onChange={(event) => handleChange("paymentProofUrl", event.target.value)}
-              />
             </div>
             <Textarea
               placeholder="Catatan tambahan, kebutuhan parkir, atau preferensi kamar..."
@@ -292,29 +332,77 @@ Silakan tunggu verifikasi owner.`,
             />
             <div className="grid gap-4 sm:grid-cols-2">
               <Card className="rounded-[24px] border-dashed">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                    <FileImage className="size-5 text-primary" />
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                      <FileImage className="size-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Upload foto KTP</p>
+                      <p className="text-sm text-muted-foreground">JPG/PNG, maksimal 5 MB</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">Foto KTP</p>
-                    <p className="text-sm text-muted-foreground">
-                      Untuk saat ini gunakan link file sementara.
-                    </p>
-                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
+                    {isUploadingKtp ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <Upload className="size-4" />
+                    )}
+                    Upload KTP
+                    <input
+                      className="hidden"
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => handleFileUpload(event.target.files, "ktp")}
+                    />
+                  </label>
+                  {form.ktpImageUrl ? (
+                    <a
+                      href={form.ktpImageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block text-sm text-primary underline"
+                    >
+                      Lihat file KTP
+                    </a>
+                  ) : null}
                 </CardContent>
               </Card>
               <Card className="rounded-[24px] border-dashed">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                    <Wallet className="size-5 text-primary" />
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                      <Wallet className="size-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Upload bukti transfer</p>
+                      <p className="text-sm text-muted-foreground">Owner akan memverifikasi dari dashboard.</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">Bukti transfer</p>
-                    <p className="text-sm text-muted-foreground">
-                      Owner bisa memverifikasi dari dashboard.
-                    </p>
-                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
+                    {isUploadingProof ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <Upload className="size-4" />
+                    )}
+                    Upload Bukti
+                    <input
+                      className="hidden"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(event) => handleFileUpload(event.target.files, "payment-proof")}
+                    />
+                  </label>
+                  {form.paymentProofUrl ? (
+                    <a
+                      href={form.paymentProofUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block text-sm text-primary underline"
+                    >
+                      Lihat bukti transfer
+                    </a>
+                  ) : null}
                 </CardContent>
               </Card>
             </div>
@@ -345,7 +433,7 @@ Silakan tunggu verifikasi owner.`,
                 )}
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <Link href="/auth?mode=register">Buat akun baru</Link>
+                <Link href="/">Kembali ke katalog</Link>
               </Button>
             </div>
           </CardContent>
@@ -406,11 +494,11 @@ Silakan tunggu verifikasi owner.`,
               </div>
               <div className="flex items-center gap-3 rounded-[22px] bg-white/10 p-4">
                 <ShieldCheck className="size-5" />
-                <p>Profil user, nomor HP, dan link KTP siap dipakai untuk profil penyewa.</p>
+                <p>Profil user, nomor HP, dan KTP akan tersimpan di profil penyewa.</p>
               </div>
               <div className="flex items-center gap-3 rounded-[22px] bg-white/10 p-4">
                 <Wallet className="size-5" />
-                <p>Pembayaran akan muncul dengan status `proof_uploaded` bila bukti transfer diisi.</p>
+                <p>Owner bisa langsung verify atau reject bukti transfer dari dashboard owner.</p>
               </div>
             </CardContent>
           </Card>
@@ -452,10 +540,20 @@ Silakan tunggu verifikasi owner.`,
                     {booking.durationMonths} bulan • Rp
                     {Number(booking.totalPrice).toLocaleString("id-ID")}
                   </p>
+                  {booking.roomNumber ? (
+                    <p className="text-sm text-muted-foreground">Nomor kamar: {booking.roomNumber}</p>
+                  ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline">{booking.status}</Badge>
                   <Badge variant="accent">{booking.paymentStatus}</Badge>
+                  {booking.paymentProofUrl ? (
+                    <Button asChild variant="ghost" size="sm">
+                      <a href={booking.paymentProofUrl} target="_blank" rel="noreferrer">
+                        Bukti Transfer
+                      </a>
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             ))

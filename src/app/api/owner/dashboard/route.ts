@@ -3,7 +3,7 @@ import { type NextRequest } from "next/server";
 
 import { db } from "@/db";
 import { bookings, units } from "@/db/schema";
-import { handleApiError, json, requireRole } from "@/lib/api";
+import { handleApiError, json, parseJsonList, requireRole } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +55,11 @@ export async function GET(request: NextRequest) {
       limit: 5,
     });
 
+    const managedUnits = await db.query.units.findMany({
+      orderBy: [desc(units.createdAt)],
+      limit: 20,
+    });
+
     return json({
       data: {
         summary: {
@@ -70,6 +75,11 @@ export async function GET(request: NextRequest) {
         latestBookings,
         unitsByType,
         pendingPaymentItems,
+        managedUnits: managedUnits.map((unit) => ({
+          ...unit,
+          facilities: parseJsonList(unit.facilities),
+          imageUrls: parseJsonList(unit.imageUrls),
+        })),
       },
     });
   } catch (error) {
