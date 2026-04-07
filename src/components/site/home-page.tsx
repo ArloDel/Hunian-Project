@@ -281,9 +281,9 @@ export function HomePage({ units }: { units: CatalogUnit[] }) {
 
       <section id="booking" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14">
         <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-          <Card className="rounded-[32px] bg-secondary text-secondary-foreground">
+          <Card className="rounded-[32px] border border-[#2f5d50] bg-[linear-gradient(160deg,#1f4339_0%,#275448_100%)] text-secondary-foreground shadow-[0_24px_80px_rgba(17,45,37,0.18)]">
             <CardHeader>
-              <Badge className="w-fit bg-white/10 text-white" variant="outline">
+              <Badge className="w-fit border-white/20 bg-[#315f52] text-white" variant="outline">
                 User Journey
               </Badge>
               <CardTitle className="font-serif text-3xl leading-tight">
@@ -296,9 +296,12 @@ export function HomePage({ units }: { units: CatalogUnit[] }) {
             </CardHeader>
             <CardContent className="space-y-4">
               {steps.map((step, index) => (
-                <div key={step.title} className="rounded-[24px] border border-white/12 bg-white/8 p-5">
+                <div
+                  key={step.title}
+                  className="rounded-[24px] border border-[#3d7363] bg-[#315f52] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                >
                   <div className="mb-3 flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-white/12">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-[#3b6e5f]">
                       <step.icon className="size-4" />
                     </div>
                     <div>
