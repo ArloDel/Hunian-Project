@@ -31,7 +31,6 @@ export function SiteHeader() {
       <div className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
         <Link href="/katalog">Katalog</Link>
         <Link href="/#booking">Booking</Link>
-        <Link href="/#owner">Owner</Link>
         <Link href="/#faq">Keunggulan</Link>
       </div>
 

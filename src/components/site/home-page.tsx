@@ -515,7 +515,6 @@ export function HomePage({ units }: { units: CatalogUnit[] }) {
           <div className="flex gap-4">
             <Link href="/katalog">Katalog</Link>
             <Link href="/booking">Booking</Link>
-            <Link href="/owner">Dashboard Owner</Link>
           </div>
         </div>
       </footer>
