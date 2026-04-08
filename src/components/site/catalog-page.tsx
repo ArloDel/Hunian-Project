@@ -195,15 +195,15 @@ export function CatalogPage({ units, availability, type }: CatalogPageProps) {
 
                     <div className="flex gap-3">
                       <Button asChild className="flex-1">
-                        <Link href="/booking">
+                        <Link href={`/booking?unitId=${unit.id}&slug=${unit.slug}`}>
                           Booking Sekarang
                           <ArrowRight className="size-4" />
                         </Link>
                       </Button>
                       <Button asChild variant="outline" className="flex-1">
-                        <Link href="/owner">
+                        <Link href={`/katalog/${unit.slug}`}>
                           <Building2 className="size-4" />
-                          Dashboard
+                          Detail Unit
                         </Link>
                       </Button>
                     </div>

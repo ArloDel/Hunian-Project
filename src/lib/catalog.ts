@@ -61,3 +61,17 @@ export async function getCatalogUnits(options: CatalogOptions = {}) {
 
   return mapped;
 }
+
+export async function getCatalogUnitBySlug(slug: string) {
+  const [record] = await db
+    .select()
+    .from(units)
+    .where(and(eq(units.slug, slug), eq(units.isPublished, true)))
+    .limit(1);
+
+  if (!record) {
+    return null;
+  }
+
+  return mapCatalogUnit(record);
+}

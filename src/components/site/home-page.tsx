@@ -257,7 +257,7 @@ export function HomePage({ units }: { units: CatalogUnit[] }) {
                       ))}
                     </div>
                     <Button asChild className="w-full">
-                      <Link href="/katalog">Lihat Detail & Booking</Link>
+                      <Link href={`/katalog/${unit.slug}`}>Lihat Detail & Booking</Link>
                     </Button>
                   </div>
                 </CardContent>

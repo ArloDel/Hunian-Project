@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   CalendarClock,
@@ -23,9 +23,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 type UnitRecord = {
   id: string;
+  slug: string;
   name: string;
   location: string;
   price: string;
+  availableRooms: number;
   facilities: string[];
 };
 
@@ -57,6 +59,7 @@ const initialForm = {
 
 export function BookingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
   const [units, setUnits] = useState<UnitRecord[]>([]);
   const [form, setForm] = useState(initialForm);
@@ -76,7 +79,18 @@ export function BookingPage() {
         const unitList = (payload.data ?? []) as UnitRecord[];
         setUnits(unitList);
 
-        if (unitList[0]) {
+        const requestedUnitId = searchParams.get("unitId");
+        const requestedSlug = searchParams.get("slug");
+        const matchedUnit = unitList.find(
+          (unit) => unit.id === requestedUnitId || unit.slug === requestedSlug,
+        );
+
+        if (matchedUnit) {
+          setForm((current) => ({
+            ...current,
+            unitId: matchedUnit.id,
+          }));
+        } else if (unitList[0]) {
           setForm((current) => ({
             ...current,
             unitId: current.unitId || unitList[0].id,
@@ -90,7 +104,7 @@ export function BookingPage() {
     };
 
     loadUnits();
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     const loadBookings = async () => {
@@ -271,6 +285,9 @@ Silakan tunggu verifikasi owner.`,
           <h1 className="font-serif text-4xl tracking-tight">Amankan unit sebelum keduluan.</h1>
           <p className="max-w-2xl text-muted-foreground">
             Booking tenant sekarang mendukung upload file nyata untuk KTP dan bukti transfer.
+            {searchParams.get("unitId")
+              ? " Unit yang Anda pilih dari katalog juga sudah diprefill otomatis."
+              : ""}
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -321,6 +338,7 @@ Silakan tunggu verifikasi owner.`,
                 {units.map((unit) => (
                   <option key={unit.id} value={unit.id}>
                     {unit.name} - {unit.location}
+                    {unit.availableRooms < 1 ? " (penuh)" : ""}
                   </option>
                 ))}
               </select>
