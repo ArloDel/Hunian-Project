@@ -90,11 +90,6 @@ export function BookingPage() {
             ...current,
             unitId: matchedUnit.id,
           }));
-        } else if (unitList[0]) {
-          setForm((current) => ({
-            ...current,
-            unitId: current.unitId || unitList[0].id,
-          }));
         }
       } catch {
         setStatus("Gagal memuat daftar unit.");
@@ -130,9 +125,11 @@ export function BookingPage() {
   }, [session]);
 
   const selectedUnit = useMemo(
-    () => units.find((unit) => unit.id === form.unitId) ?? units[0],
+    () => units.find((unit) => unit.id === form.unitId) ?? null,
     [form.unitId, units],
   );
+
+  const isPrefilledFromCatalog = Boolean(searchParams.get("unitId") || searchParams.get("slug"));
 
   const totalTagihan = useMemo(() => {
     if (!selectedUnit) {
@@ -280,14 +277,14 @@ Silakan tunggu verifikasi owner.`,
             Kembali ke beranda
           </Link>
           <Badge variant="accent" className="w-fit">
-            Simulasi Booking
+            Form Booking
           </Badge>
           <h1 className="font-serif text-4xl tracking-tight">Amankan unit sebelum keduluan.</h1>
           <p className="max-w-2xl text-muted-foreground">
             Booking tenant sekarang mendukung upload file nyata untuk KTP dan bukti transfer.
-            {searchParams.get("unitId")
+            {isPrefilledFromCatalog
               ? " Unit yang Anda pilih dari katalog juga sudah diprefill otomatis."
-              : ""}
+              : " Mulailah dengan memilih unit yang ingin Anda pesan terlebih dahulu."}
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -327,6 +324,9 @@ Silakan tunggu verifikasi owner.`,
                 onChange={(event) => handleChange("checkInDate", event.target.value)}
               />
               <Input
+                type="number"
+                min={1}
+                max={24}
                 value={form.durationMonths}
                 onChange={(event) => handleChange("durationMonths", event.target.value)}
               />
@@ -335,8 +335,11 @@ Silakan tunggu verifikasi owner.`,
                 value={form.unitId}
                 onChange={(event) => handleChange("unitId", event.target.value)}
               >
+                <option value="" disabled>
+                  Pilih unit yang ingin dibooking
+                </option>
                 {units.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
+                  <option key={unit.id} value={unit.id} disabled={unit.availableRooms < 1}>
                     {unit.name} - {unit.location}
                     {unit.availableRooms < 1 ? " (penuh)" : ""}
                   </option>
@@ -451,7 +454,7 @@ Silakan tunggu verifikasi owner.`,
                 )}
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <Link href="/">Kembali ke katalog</Link>
+                <Link href="/katalog">Kembali ke katalog</Link>
               </Button>
             </div>
           </CardContent>
@@ -463,16 +466,17 @@ Silakan tunggu verifikasi owner.`,
               <Badge variant="secondary" className="w-fit">
                 Ringkasan Unit
               </Badge>
-              <CardTitle>{selectedUnit?.name ?? "Memuat unit..."}</CardTitle>
+              <CardTitle>{selectedUnit?.name ?? "Belum ada unit dipilih"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-[24px] bg-[linear-gradient(135deg,#f5dbb5_0%,#fff4e5_100%)] p-5">
                 <p className="text-sm text-muted-foreground">Lokasi</p>
                 <p className="mt-2 text-lg font-semibold">
-                  {selectedUnit?.location ?? "Sedang dimuat"}
+                  {selectedUnit?.location ?? "Pilih unit dari dropdown di sebelah kiri."}
                 </p>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  {(selectedUnit?.facilities ?? []).join(", ") || "Fasilitas akan muncul di sini."}
+                  {(selectedUnit?.facilities ?? []).join(", ") ||
+                    "Setelah unit dipilih, fasilitas dan harga akan muncul di kartu ringkasan ini."}
                 </p>
               </div>
               <div className="space-y-3 text-sm">
