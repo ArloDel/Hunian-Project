@@ -1,10 +1,7 @@
 import {
   BadgeCheck,
-  Building2,
   CalendarDays,
   Camera,
-  ChartColumnIncreasing,
-  Landmark,
   MapPin,
   MessagesSquare,
   MoonStar,
@@ -45,18 +42,6 @@ export const homeFacilities = [
   { label: "Keamanan CCTV", icon: ShieldCheck },
   { label: "Galeri foto lengkap", icon: Camera },
   { label: "Booking fleksibel", icon: CalendarDays },
-];
-
-export const ownerPreviewCards = [
-  { label: "Penghuni aktif", value: "41", icon: Building2 },
-  { label: "Pembayaran pending", value: "6", icon: Landmark },
-  { label: "Revenue tahunan", value: "Rp814 jt", icon: ChartColumnIncreasing },
-];
-
-export const ownerPreviewPayments = [
-  "Kamar B-12 • Masuk 10 April 2026 • Transfer BCA",
-  "Kontrakan A2 • Perpanjangan 12 bulan • Upload bukti jam 08:15",
-  "Kamar C-07 • Booking baru • Total Rp3.100.000",
 ];
 
 export const homeAdvantages = [
