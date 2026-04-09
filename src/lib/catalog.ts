@@ -24,6 +24,12 @@ export type CatalogUnit = {
   updatedAt: Date;
 };
 
+export const catalogPlaceholderImages = [
+  "/placeholder-unit-1.svg",
+  "/placeholder-unit-2.svg",
+  "/placeholder-unit-3.svg",
+] as const;
+
 type CatalogOptions = {
   type?: UnitType | "all";
   availability?: CatalogAvailability;
@@ -74,4 +80,48 @@ export async function getCatalogUnitBySlug(slug: string) {
   }
 
   return mapCatalogUnit(record);
+}
+
+export function formatCatalogPrice(value: string) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+export function getCatalogUnitTypeLabel(type: CatalogUnit["type"]) {
+  return type === "kost" ? "Kost" : "Kontrakan";
+}
+
+export function getCatalogAvailabilityLabel(unit: CatalogUnit) {
+  if (unit.availableRooms > 1) {
+    return `${unit.availableRooms} unit tersedia`;
+  }
+
+  if (unit.availableRooms === 1) {
+    return "Tersisa 1 unit";
+  }
+
+  return "Sedang penuh";
+}
+
+export function getHomeAvailabilityLabel(unit: CatalogUnit) {
+  if (unit.availableRooms > 1) {
+    return `Tersedia ${unit.availableRooms} unit`;
+  }
+
+  if (unit.availableRooms === 1) {
+    return "Tersisa 1 unit";
+  }
+
+  return "Sedang penuh";
+}
+
+export function getCatalogPreview(units: CatalogUnit[], limit = 3) {
+  return units.slice(0, limit);
+}
+
+export function getCatalogGalleryImages(imageUrls: string[]) {
+  return imageUrls.length ? imageUrls : [...catalogPlaceholderImages];
 }

@@ -1,8 +1,10 @@
-import { CatalogPage } from "@/components/site/catalog-page";
+import { CatalogPage } from "@/components/site/catalog/catalog-page";
 import {
   getCatalogUnits,
   type CatalogAvailability,
 } from "@/lib/catalog";
+
+export const dynamic = "force-dynamic";
 
 function parseAvailability(value?: string): CatalogAvailability {
   if (value === "available" || value === "full") {

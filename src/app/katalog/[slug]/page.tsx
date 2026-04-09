@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { UnitDetailPage } from "@/components/site/unit-detail-page";
+import { UnitDetailPage } from "@/components/site/unit-detail/unit-detail-page";
 import { getCatalogUnitBySlug } from "@/lib/catalog";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

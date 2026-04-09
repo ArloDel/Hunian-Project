@@ -1,4 +1,4 @@
-import { AuthPage } from "@/components/site/auth-page";
+import { AuthPage } from "@/components/site/auth/auth-page";
 
 export default async function Auth({
   searchParams,

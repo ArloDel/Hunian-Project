@@ -1,4 +1,4 @@
-import { OwnerPage } from "@/components/site/owner-page";
+import { OwnerPage } from "@/components/site/owner/owner-page";
 import { requireRoleRoute } from "@/lib/auth-guard";
 
 export default async function Owner() {
