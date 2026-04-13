@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 
 import { db } from "@/db";
@@ -46,7 +46,10 @@ export async function GET(request: NextRequest) {
       .groupBy(units.type);
 
     const pendingPaymentItems = await db.query.bookings.findMany({
-      where: eq(bookings.status, "pending"),
+      where: and(
+        eq(bookings.status, "pending"),
+        eq(bookings.paymentMethod, "manual_transfer"),
+      ),
       with: {
         unit: true,
         user: true,

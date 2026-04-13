@@ -76,10 +76,19 @@ export async function PATCH(
       .update(bookings)
       .set({
         status: payload.status ?? booking.status,
+        paymentMethod: payload.paymentMethod ?? booking.paymentMethod,
         paymentStatus: payload.paymentStatus ?? booking.paymentStatus,
         paymentProofUrl: payload.paymentProofUrl ?? booking.paymentProofUrl,
+        paymentProvider: payload.paymentProvider ?? booking.paymentProvider,
+        paymentReference: payload.paymentReference ?? booking.paymentReference,
+        paymentExternalId: payload.paymentExternalId ?? booking.paymentExternalId,
+        paymentUrl: payload.paymentUrl ?? booking.paymentUrl,
         notes: payload.notes ?? booking.notes,
         roomNumber: payload.roomNumber ?? booking.roomNumber,
+        paidAt:
+          payload.paymentStatus === "verified"
+            ? booking.paidAt ?? new Date()
+            : booking.paidAt,
         verifiedAt:
           payload.paymentStatus === "verified" ? new Date() : booking.verifiedAt,
         verifiedByUserId:

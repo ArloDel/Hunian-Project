@@ -22,11 +22,13 @@ export const bookingStatusValues = [
   "cancelled",
   "completed",
 ] as const;
+export const paymentMethodValues = ["manual_transfer", "xendit"] as const;
 export const paymentStatusValues = [
   "unpaid",
   "proof_uploaded",
   "verified",
   "rejected",
+  "expired",
 ] as const;
 
 export const users = mysqlTable(
@@ -172,11 +174,19 @@ export const bookings = mysqlTable(
     checkInDate: date("check_in_date").notNull(),
     durationMonths: int("duration_months").notNull(),
     totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
+    paymentMethod: mysqlEnum("payment_method", paymentMethodValues)
+      .notNull()
+      .default("manual_transfer"),
     status: mysqlEnum("status", bookingStatusValues).notNull().default("pending"),
     paymentStatus: mysqlEnum("payment_status", paymentStatusValues)
       .notNull()
       .default("unpaid"),
     paymentProofUrl: text("payment_proof_url"),
+    paymentProvider: varchar("payment_provider", { length: 50 }),
+    paymentReference: varchar("payment_reference", { length: 100 }),
+    paymentExternalId: varchar("payment_external_id", { length: 100 }),
+    paymentUrl: text("payment_url"),
+    paidAt: datetime("paid_at"),
     notes: text("notes"),
     roomNumber: varchar("room_number", { length: 50 }),
     reminderSentAt: datetime("reminder_sent_at"),
@@ -264,6 +274,7 @@ export const schema = {
 export type UserRole = (typeof userRoleValues)[number];
 export type UnitType = (typeof unitTypeValues)[number];
 export type BookingStatus = (typeof bookingStatusValues)[number];
+export type PaymentMethod = (typeof paymentMethodValues)[number];
 export type PaymentStatus = (typeof paymentStatusValues)[number];
 
 export const dashboardAggregates = {

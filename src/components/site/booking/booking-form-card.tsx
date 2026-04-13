@@ -84,6 +84,39 @@ export function BookingFormCard({
             ))}
           </select>
         </div>
+        <div className="grid gap-3">
+          <p className="text-sm font-medium">Metode pembayaran</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex cursor-pointer items-start gap-3 rounded-[24px] border border-border bg-white/70 p-4">
+              <input
+                type="radio"
+                name="paymentMethod"
+                checked={form.paymentMethod === "manual_transfer"}
+                onChange={() => onFieldChange("paymentMethod", "manual_transfer")}
+              />
+              <div>
+                <p className="font-medium">Transfer Manual</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Upload bukti transfer dan tunggu verifikasi owner.
+                </p>
+              </div>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3 rounded-[24px] border border-border bg-white/70 p-4">
+              <input
+                type="radio"
+                name="paymentMethod"
+                checked={form.paymentMethod === "xendit"}
+                onChange={() => onFieldChange("paymentMethod", "xendit")}
+              />
+              <div>
+                <p className="font-medium">Pembayaran Online Xendit</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Setelah booking dibuat, Anda akan diarahkan ke halaman checkout Xendit.
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
         <Textarea
           placeholder="Catatan tambahan, kebutuhan parkir, atau preferensi kamar..."
           value={form.notes}
@@ -127,45 +160,67 @@ export function BookingFormCard({
               ) : null}
             </CardContent>
           </Card>
-          <Card className="rounded-[24px] border-dashed">
-            <CardContent className="space-y-3 p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                  <Wallet className="size-5 text-primary" />
+          {form.paymentMethod === "manual_transfer" ? (
+            <Card className="rounded-[24px] border-dashed">
+              <CardContent className="space-y-3 p-5">
+                <div className="flex items-center gap-4">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                    <Wallet className="size-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Upload bukti transfer</p>
+                    <p className="text-sm text-muted-foreground">
+                      Owner akan memverifikasi dari dashboard.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">Upload bukti transfer</p>
-                  <p className="text-sm text-muted-foreground">
-                    Owner akan memverifikasi dari dashboard.
-                  </p>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
+                  {isUploadingProof ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                  ) : (
+                    <Upload className="size-4" />
+                  )}
+                  Upload Bukti
+                  <input
+                    className="hidden"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(event) => onFileUpload(event.target.files, "payment-proof")}
+                  />
+                </label>
+                {form.paymentProofUrl ? (
+                  <a
+                    href={form.paymentProofUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-sm text-primary underline"
+                  >
+                    Lihat bukti transfer
+                  </a>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="rounded-[24px] border-dashed">
+              <CardContent className="space-y-3 p-5">
+                <div className="flex items-center gap-4">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                    <Wallet className="size-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Checkout online via Xendit</p>
+                    <p className="text-sm text-muted-foreground">
+                      Sistem akan membuat invoice otomatis setelah booking berhasil dibuat.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
-                {isUploadingProof ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <Upload className="size-4" />
-                )}
-                Upload Bukti
-                <input
-                  className="hidden"
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(event) => onFileUpload(event.target.files, "payment-proof")}
-                />
-              </label>
-              {form.paymentProofUrl ? (
-                <a
-                  href={form.paymentProofUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-sm text-primary underline"
-                >
-                  Lihat bukti transfer
-                </a>
-              ) : null}
-            </CardContent>
-          </Card>
+                <div className="rounded-[20px] bg-muted/70 p-4 text-sm leading-6 text-muted-foreground">
+                  Anda tidak perlu upload bukti transfer manual. Status pembayaran akan diupdate
+                  otomatis dari webhook Xendit.
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         {status ? (
           <div className="whitespace-pre-line rounded-[20px] bg-muted/80 p-4 text-sm leading-6 text-foreground">

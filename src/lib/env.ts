@@ -11,6 +11,9 @@ const envSchema = z.object({
     .min(16)
     .default("replace-this-with-a-secure-better-auth-secret"),
   BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  XENDIT_SECRET_KEY: z.string().default(""),
+  XENDIT_WEBHOOK_TOKEN: z.string().default(""),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

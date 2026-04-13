@@ -16,12 +16,16 @@ export function findRequestedBookingUnit(
 export function calculateBookingTotal(
   unit: BookingUnitRecord | null,
   durationMonths: string,
+  paymentMethod: BookingFormState["paymentMethod"],
 ) {
   if (!unit) {
     return 0;
   }
 
-  return Number(unit.price) * Number(durationMonths || 0) + 150000;
+  return (
+    Number(unit.price) * Number(durationMonths || 0) +
+    (paymentMethod === "manual_transfer" ? 150000 : 0)
+  );
 }
 
 export async function uploadBookingFile(

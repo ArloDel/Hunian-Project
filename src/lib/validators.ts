@@ -37,16 +37,22 @@ export const createBookingSchema = z.object({
   unitId: z.string().min(1),
   checkInDate: z.string().date(),
   durationMonths: z.coerce.number().int().min(1).max(24),
+  paymentMethod: z.enum(["manual_transfer", "xendit"]).default("manual_transfer"),
   notes: z.string().max(2000).optional().nullable(),
   paymentProofUrl: uploadUrlSchema.optional().nullable(),
 });
 
 export const updateBookingSchema = z.object({
   status: z.enum(["pending", "confirmed", "cancelled", "completed"]).optional(),
+  paymentMethod: z.enum(["manual_transfer", "xendit"]).optional(),
   paymentStatus: z
-    .enum(["unpaid", "proof_uploaded", "verified", "rejected"])
+    .enum(["unpaid", "proof_uploaded", "verified", "rejected", "expired"])
     .optional(),
   paymentProofUrl: uploadUrlSchema.optional().nullable(),
+  paymentProvider: z.string().max(50).optional().nullable(),
+  paymentReference: z.string().max(100).optional().nullable(),
+  paymentExternalId: z.string().max(100).optional().nullable(),
+  paymentUrl: z.string().url().optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   roomNumber: z.string().max(50).optional().nullable(),
 });

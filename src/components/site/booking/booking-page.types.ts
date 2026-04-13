@@ -15,8 +15,14 @@ export type BookingRecord = {
   durationMonths: number;
   totalPrice: string;
   status: string;
+  paymentMethod: "manual_transfer" | "xendit";
   paymentStatus: string;
   paymentProofUrl: string | null;
+  paymentProvider: string | null;
+  paymentReference: string | null;
+  paymentExternalId: string | null;
+  paymentUrl: string | null;
+  paidAt: string | Date | null;
   roomNumber: string | null;
   unit: {
     name: string;
@@ -27,6 +33,7 @@ export type BookingRecord = {
 export type BookingFormState = {
   phoneNumber: string;
   ktpImageUrl: string;
+  paymentMethod: "manual_transfer" | "xendit";
   paymentProofUrl: string;
   checkInDate: string;
   durationMonths: string;
@@ -37,6 +44,7 @@ export type BookingFormState = {
 export const initialBookingForm: BookingFormState = {
   phoneNumber: "",
   ktpImageUrl: "",
+  paymentMethod: "manual_transfer",
   paymentProofUrl: "",
   checkInDate: "",
   durationMonths: "12",

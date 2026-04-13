@@ -66,7 +66,10 @@ export function useBookingFlow(isLoggedIn: boolean) {
 
   const selectedUnit = useMemo(() => units.find((unit) => unit.id === form.unitId) ?? null, [form.unitId, units]);
   const isPrefilledFromCatalog = Boolean(searchParams.get("unitId") || searchParams.get("slug"));
-  const totalTagihan = useMemo(() => calculateBookingTotal(selectedUnit, form.durationMonths), [form.durationMonths, selectedUnit]);
+  const totalTagihan = useMemo(
+    () => calculateBookingTotal(selectedUnit, form.durationMonths, form.paymentMethod),
+    [form.durationMonths, form.paymentMethod, selectedUnit],
+  );
 
   const handleChange = (key: keyof typeof form, value: string) => setForm((current) => updateBookingFormField(current, key, value));
 
@@ -105,7 +108,11 @@ export function useBookingFlow(isLoggedIn: boolean) {
     try {
       const booking = await createBooking(form);
       await updateBookingUserProfile(form);
-      setStatus(`Booking berhasil dibuat dengan kode ${booking.bookingCode ?? "-"}.\nSilakan tunggu verifikasi owner.`);
+      setStatus(
+        form.paymentMethod === "xendit"
+          ? `Booking berhasil dibuat dengan kode ${booking.bookingCode ?? "-"}.\nAnda akan diarahkan ke checkout Xendit.`
+          : `Booking berhasil dibuat dengan kode ${booking.bookingCode ?? "-"}.\nSilakan tunggu verifikasi owner.`,
+      );
       setBookingHistory((current) => [booking, ...current]);
       setForm((current) => ({
         ...initialBookingForm,
@@ -114,7 +121,12 @@ export function useBookingFlow(isLoggedIn: boolean) {
         checkInDate: current.checkInDate,
         durationMonths: current.durationMonths,
         unitId: current.unitId,
+        paymentMethod: current.paymentMethod,
       }));
+      if (form.paymentMethod === "xendit" && booking.paymentUrl) {
+        window.location.assign(booking.paymentUrl);
+        return;
+      }
       router.refresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Booking gagal diproses.");

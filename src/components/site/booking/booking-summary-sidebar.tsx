@@ -49,10 +49,12 @@ export function BookingSummarySidebar({
               <span className="text-muted-foreground">Durasi sewa</span>
               <span className="font-semibold">{form.durationMonths || 0} bulan</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Biaya admin</span>
-              <span className="font-semibold">Rp150.000</span>
-            </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Biaya admin</span>
+            <span className="font-semibold">
+              {form.paymentMethod === "xendit" ? "Rp0" : "Rp150.000"}
+            </span>
+          </div>
             <Separator />
             <div className="flex items-center justify-between text-base">
               <span>Total tagihan</span>
@@ -79,7 +81,11 @@ export function BookingSummarySidebar({
           </div>
           <div className="flex items-center gap-3 rounded-[22px] bg-white/10 p-4">
             <Wallet className="size-5" />
-            <p>Owner bisa langsung verify atau reject bukti transfer dari dashboard owner.</p>
+            <p>
+              {form.paymentMethod === "xendit"
+                ? "Pembayaran online akan dikonfirmasi otomatis oleh webhook Xendit."
+                : "Owner bisa langsung verify atau reject bukti transfer dari dashboard owner."}
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -22,8 +22,10 @@ export async function createBooking(form: BookingFormState) {
       unitId: form.unitId,
       checkInDate: form.checkInDate,
       durationMonths: Number(form.durationMonths),
+      paymentMethod: form.paymentMethod,
       notes: form.notes || null,
-      paymentProofUrl: form.paymentProofUrl || null,
+      paymentProofUrl:
+        form.paymentMethod === "manual_transfer" ? form.paymentProofUrl || null : null,
     }),
   });
   const payload = await response.json();

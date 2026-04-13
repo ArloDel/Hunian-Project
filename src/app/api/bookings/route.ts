@@ -11,6 +11,7 @@ import {
   makeBookingCode,
 } from "@/lib/api";
 import { createBookingSchema } from "@/lib/validators";
+import { createXenditInvoice, getAppBaseUrl } from "@/lib/xendit";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,20 +55,28 @@ export async function POST(request: NextRequest) {
       throw new ApiError(409, "Unit sedang penuh.");
     }
 
-    const totalPrice = Number(unit.price) * payload.durationMonths;
+    const adminFee = payload.paymentMethod === "manual_transfer" ? 150000 : 0;
+    const totalPrice = Number(unit.price) * payload.durationMonths + adminFee;
     const id = crypto.randomUUID();
+    const bookingCode = makeBookingCode();
+    const isXenditPayment = payload.paymentMethod === "xendit";
 
     await db.transaction(async (tx) => {
       await tx.insert(bookings).values({
         id,
-        bookingCode: makeBookingCode(),
+        bookingCode,
         userId: session.user.id,
         unitId: payload.unitId,
         checkInDate: new Date(payload.checkInDate),
         durationMonths: payload.durationMonths,
         totalPrice: totalPrice.toFixed(2),
+        paymentMethod: payload.paymentMethod,
+        paymentProvider: isXenditPayment ? "xendit" : null,
         status: "pending",
-        paymentStatus: payload.paymentProofUrl ? "proof_uploaded" : "unpaid",
+        paymentStatus:
+          payload.paymentMethod === "manual_transfer" && payload.paymentProofUrl
+            ? "proof_uploaded"
+            : "unpaid",
         paymentProofUrl: payload.paymentProofUrl ?? null,
         notes: payload.notes ?? null,
         createdAt: new Date(),
@@ -83,6 +92,43 @@ export async function POST(request: NextRequest) {
         .where(and(eq(units.id, unit.id), eq(units.availableRooms, unit.availableRooms)));
     });
 
+    if (isXenditPayment) {
+      try {
+        const appBaseUrl = getAppBaseUrl();
+        const invoice = await createXenditInvoice({
+          externalId: bookingCode,
+          amount: totalPrice,
+          payerEmail: session.user.email,
+          description: `Pembayaran booking ${bookingCode} untuk ${unit.name}`,
+          successRedirectUrl: `${appBaseUrl}/booking?payment=success&booking=${bookingCode}`,
+          failureRedirectUrl: `${appBaseUrl}/booking?payment=failed&booking=${bookingCode}`,
+        });
+
+        await db
+          .update(bookings)
+          .set({
+            paymentReference: invoice.id,
+            paymentExternalId: invoice.externalId,
+            paymentUrl: invoice.invoiceUrl,
+            updatedAt: new Date(),
+          })
+          .where(eq(bookings.id, id));
+      } catch (error) {
+        await db.transaction(async (tx) => {
+          await tx.delete(bookings).where(eq(bookings.id, id));
+          await tx
+            .update(units)
+            .set({
+              availableRooms: unit.availableRooms,
+              updatedAt: new Date(),
+            })
+            .where(eq(units.id, unit.id));
+        });
+
+        throw error;
+      }
+    }
+
     const [created] = await db.query.bookings.findMany({
       where: eq(bookings.id, id),
       with: {
@@ -94,7 +140,9 @@ export async function POST(request: NextRequest) {
 
     return json(
       {
-        message: "Booking berhasil dibuat.",
+        message: isXenditPayment
+          ? "Booking berhasil dibuat dan invoice Xendit sudah siap."
+          : "Booking berhasil dibuat.",
         data: created,
       },
       { status: 201 },
