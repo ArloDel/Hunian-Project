@@ -6,6 +6,7 @@ import { BookingPageHeader } from "@/components/site/booking/booking-page-header
 import { BookingSummarySidebar } from "@/components/site/booking/booking-summary-sidebar";
 import { useBookingFlow } from "@/components/site/booking/use-booking-flow";
 import { authClient } from "@/lib/auth-client";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function BookingPage() {
   const { data: session, isPending } = authClient.useSession();
@@ -21,6 +22,7 @@ export function BookingPage() {
     isUploadingProof,
     selectedUnit,
     isPrefilledFromCatalog,
+    paymentFeedback,
     totalTagihan,
     handleChange,
     handleFileUpload,
@@ -34,6 +36,12 @@ export function BookingPage() {
         userName={session?.user?.name}
         isPrefilledFromCatalog={isPrefilledFromCatalog}
       />
+
+      {paymentFeedback ? (
+        <Card className="rounded-[24px] border-secondary/20 bg-secondary/5">
+          <CardContent className="p-4 text-sm leading-6">{paymentFeedback}</CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_0.85fr]">
         <BookingFormCard

@@ -3,6 +3,14 @@
 import { LoaderCircle } from "lucide-react";
 
 import type { BookingRecord } from "@/components/site/booking/booking-page.types";
+import {
+  getBookingStatusLabel,
+  getBookingStatusVariant,
+  getPaymentMethodDescription,
+  getPaymentMethodLabel,
+  getPaymentStatusLabel,
+  getPaymentStatusVariant,
+} from "@/components/site/booking/booking-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,28 +58,29 @@ export function BookingHistoryCard({
                   {booking.unit?.name ?? "Unit"} - {booking.bookingCode}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Check-in {new Date(booking.checkInDate).toLocaleDateString("id-ID")} •{" "}
-                  {booking.durationMonths} bulan • Rp
+                  Check-in {new Date(booking.checkInDate).toLocaleDateString("id-ID")} |{" "}
+                  {booking.durationMonths} bulan | Rp
                   {Number(booking.totalPrice).toLocaleString("id-ID")}
                 </p>
                 {booking.roomNumber ? (
                   <p className="text-sm text-muted-foreground">Nomor kamar: {booking.roomNumber}</p>
                 ) : null}
-                {booking.paymentMethod === "xendit" ? (
-                  <p className="text-sm text-muted-foreground">
-                    Pembayaran online melalui Xendit
-                    {booking.paidAt
-                      ? ` • dibayar ${new Date(booking.paidAt).toLocaleDateString("id-ID")}`
-                      : ""}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Pembayaran transfer manual</p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  {getPaymentMethodDescription(booking.paymentMethod)}
+                  {booking.paidAt
+                    ? ` | dibayar ${new Date(booking.paidAt).toLocaleDateString("id-ID")}`
+                    : ""}
+                </p>
               </div>
+
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">{booking.status}</Badge>
-                <Badge variant="accent">{booking.paymentStatus}</Badge>
-                <Badge variant="secondary">{booking.paymentMethod}</Badge>
+                <Badge variant={getBookingStatusVariant(booking.status)}>
+                  {getBookingStatusLabel(booking.status)}
+                </Badge>
+                <Badge variant={getPaymentStatusVariant(booking.paymentStatus)}>
+                  {getPaymentStatusLabel(booking.paymentStatus)}
+                </Badge>
+                <Badge variant="outline">{getPaymentMethodLabel(booking.paymentMethod)}</Badge>
                 {booking.paymentProofUrl ? (
                   <Button asChild variant="ghost" size="sm">
                     <a href={booking.paymentProofUrl} target="_blank" rel="noreferrer">
@@ -79,10 +88,12 @@ export function BookingHistoryCard({
                     </a>
                   </Button>
                 ) : null}
-                {booking.paymentMethod === "xendit" && booking.paymentUrl && booking.paymentStatus === "unpaid" ? (
+                {booking.paymentMethod === "xendit" &&
+                booking.paymentUrl &&
+                booking.paymentStatus === "unpaid" ? (
                   <Button asChild variant="ghost" size="sm">
                     <a href={booking.paymentUrl} target="_blank" rel="noreferrer">
-                      Bayar Online
+                      Lanjutkan Checkout
                     </a>
                   </Button>
                 ) : null}

@@ -26,11 +26,13 @@ export function useBookingFlow(isLoggedIn: boolean) {
       try {
         const unitList = await fetchBookingUnits();
         setUnits(unitList);
+
         const matchedUnit = findRequestedBookingUnit(
           unitList,
           searchParams.get("unitId"),
           searchParams.get("slug"),
         );
+
         if (matchedUnit) {
           setForm((current) => ({ ...current, unitId: matchedUnit.id }));
         }
@@ -64,14 +66,37 @@ export function useBookingFlow(isLoggedIn: boolean) {
     loadBookings();
   }, [isLoggedIn]);
 
-  const selectedUnit = useMemo(() => units.find((unit) => unit.id === form.unitId) ?? null, [form.unitId, units]);
+  const selectedUnit = useMemo(
+    () => units.find((unit) => unit.id === form.unitId) ?? null,
+    [form.unitId, units],
+  );
   const isPrefilledFromCatalog = Boolean(searchParams.get("unitId") || searchParams.get("slug"));
+  const paymentFeedback = useMemo(() => {
+    const payment = searchParams.get("payment");
+    const booking = searchParams.get("booking");
+
+    if (!payment || !booking) {
+      return "";
+    }
+
+    if (payment === "success") {
+      return `Pembayaran untuk booking ${booking} berhasil diproses. Status akan diperbarui otomatis beberapa saat lagi.`;
+    }
+
+    if (payment === "failed") {
+      return `Pembayaran untuk booking ${booking} belum selesai. Anda bisa melanjutkan checkout dari riwayat booking.`;
+    }
+
+    return "";
+  }, [searchParams]);
   const totalTagihan = useMemo(
     () => calculateBookingTotal(selectedUnit, form.durationMonths, form.paymentMethod),
     [form.durationMonths, form.paymentMethod, selectedUnit],
   );
 
-  const handleChange = (key: keyof typeof form, value: string) => setForm((current) => updateBookingFormField(current, key, value));
+  const handleChange = (key: keyof typeof form, value: string) => {
+    setForm((current) => updateBookingFormField(current, key, value));
+  };
 
   const setUploadingState = (kind: "ktp" | "payment-proof", value: boolean) => {
     if (kind === "ktp") {
@@ -84,7 +109,9 @@ export function useBookingFlow(isLoggedIn: boolean) {
 
   const handleFileUpload = async (fileList: FileList | null, kind: "ktp" | "payment-proof") => {
     const file = fileList?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     try {
       setUploadingState(kind, true);
@@ -105,6 +132,7 @@ export function useBookingFlow(isLoggedIn: boolean) {
 
     setIsSubmitting(true);
     setStatus("");
+
     try {
       const booking = await createBooking(form);
       await updateBookingUserProfile(form);
@@ -123,10 +151,12 @@ export function useBookingFlow(isLoggedIn: boolean) {
         unitId: current.unitId,
         paymentMethod: current.paymentMethod,
       }));
+
       if (form.paymentMethod === "xendit" && booking.paymentUrl) {
         window.location.assign(booking.paymentUrl);
         return;
       }
+
       router.refresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Booking gagal diproses.");
@@ -136,8 +166,21 @@ export function useBookingFlow(isLoggedIn: boolean) {
   };
 
   return {
-    units, form, status, isSubmitting, isLoadingUnits, bookingHistory, isLoadingBookings,
-    isUploadingKtp, isUploadingProof, selectedUnit, isPrefilledFromCatalog, totalTagihan,
-    handleChange, handleFileUpload, handleBooking,
+    units,
+    form,
+    status,
+    isSubmitting,
+    isLoadingUnits,
+    bookingHistory,
+    isLoadingBookings,
+    isUploadingKtp,
+    isUploadingProof,
+    selectedUnit,
+    isPrefilledFromCatalog,
+    paymentFeedback,
+    totalTagihan,
+    handleChange,
+    handleFileUpload,
+    handleBooking,
   };
 }

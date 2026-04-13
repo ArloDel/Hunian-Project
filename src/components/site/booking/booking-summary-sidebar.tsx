@@ -3,6 +3,7 @@
 import { CalendarClock, ShieldCheck, Wallet } from "lucide-react";
 
 import type { BookingFormState, BookingUnitRecord } from "@/components/site/booking/booking-page.types";
+import { getPaymentMethodLabel } from "@/components/site/booking/booking-status";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -37,7 +38,13 @@ export function BookingSummarySidebar({
               {(selectedUnit?.facilities ?? []).join(", ") ||
                 "Setelah unit dipilih, fasilitas dan harga akan muncul di kartu ringkasan ini."}
             </p>
+            <div className="mt-4">
+              <Badge variant={form.paymentMethod === "xendit" ? "secondary" : "outline"}>
+                {getPaymentMethodLabel(form.paymentMethod)}
+              </Badge>
+            </div>
           </div>
+
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Harga bulanan</span>
@@ -49,12 +56,12 @@ export function BookingSummarySidebar({
               <span className="text-muted-foreground">Durasi sewa</span>
               <span className="font-semibold">{form.durationMonths || 0} bulan</span>
             </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Biaya admin</span>
-            <span className="font-semibold">
-              {form.paymentMethod === "xendit" ? "Rp0" : "Rp150.000"}
-            </span>
-          </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Biaya admin</span>
+              <span className="font-semibold">
+                {form.paymentMethod === "xendit" ? "Rp0" : "Rp150.000"}
+              </span>
+            </div>
             <Separator />
             <div className="flex items-center justify-between text-base">
               <span>Total tagihan</span>
@@ -83,8 +90,8 @@ export function BookingSummarySidebar({
             <Wallet className="size-5" />
             <p>
               {form.paymentMethod === "xendit"
-                ? "Pembayaran online akan dikonfirmasi otomatis oleh webhook Xendit."
-                : "Owner bisa langsung verify atau reject bukti transfer dari dashboard owner."}
+                ? "Setelah booking dibuat, Anda akan diarahkan ke checkout Xendit dan status dibayar akan masuk otomatis."
+                : "Owner bisa langsung memeriksa bukti transfer dan mengonfirmasi booking Anda dari dashboard owner."}
             </p>
           </div>
         </CardContent>
