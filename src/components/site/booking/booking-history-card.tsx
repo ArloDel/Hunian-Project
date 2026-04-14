@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { LoaderCircle } from "lucide-react";
 
 import type { BookingRecord } from "@/components/site/booking/booking-page.types";
@@ -81,6 +82,9 @@ export function BookingHistoryCard({
                   {getPaymentStatusLabel(booking.paymentStatus)}
                 </Badge>
                 <Badge variant="outline">{getPaymentMethodLabel(booking.paymentMethod)}</Badge>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href={`/booking/${booking.id}`}>Detail Pembayaran</Link>
+                </Button>
                 {booking.paymentProofUrl ? (
                   <Button asChild variant="ghost" size="sm">
                     <a href={booking.paymentProofUrl} target="_blank" rel="noreferrer">
