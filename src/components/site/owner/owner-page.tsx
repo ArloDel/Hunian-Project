@@ -3,11 +3,11 @@
 import { LoaderCircle } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { OwnerBookingsCard } from "@/components/site/owner/owner-bookings-card";
 import { OwnerFinanceCard } from "@/components/site/owner/owner-finance-card";
 import { OwnerPageHeader } from "@/components/site/owner/owner-page-header";
 import { useOwnerDashboard } from "@/components/site/owner/use-owner-dashboard";
 import { toUnitForm, buildOwnerStats } from "@/components/site/owner/owner-page.utils";
-import { OwnerPaymentQueue } from "@/components/site/owner/owner-payment-queue";
 import { OwnerStatsGrid } from "@/components/site/owner/owner-stats-grid";
 import { OwnerUnitFormCard } from "@/components/site/owner/owner-unit-form-card";
 import { OwnerUnitManagementCard } from "@/components/site/owner/owner-unit-management-card";
@@ -59,8 +59,8 @@ export function OwnerPage() {
 
           <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="grid gap-5">
-              <OwnerPaymentQueue
-                items={dashboard?.pendingPaymentItems ?? []}
+              <OwnerBookingsCard
+                items={dashboard?.ownerBookings ?? []}
                 bookingRoomNumbers={bookingRoomNumbers}
                 busyBookingId={busyBookingId}
                 onRoomNumberChange={(bookingId, value) =>

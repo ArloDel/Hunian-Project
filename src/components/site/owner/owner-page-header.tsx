@@ -24,8 +24,8 @@ export function OwnerPageHeader({ isPending, userName }: OwnerPageHeaderProps) {
         </Badge>
         <h1 className="font-serif text-4xl tracking-tight">Operasional harian dalam satu layar.</h1>
         <p className="max-w-2xl text-muted-foreground">
-          Dashboard ini sekarang mendukung verifikasi booking, upload gambar unit, serta CRUD
-          unit langsung dari UI.
+          Dashboard ini sekarang mendukung pemantauan booking manual dan Xendit, verifikasi
+          pembayaran manual, upload gambar unit, serta CRUD unit langsung dari UI.
         </p>
       </div>
       <div className="flex flex-col items-start gap-2 sm:items-end">

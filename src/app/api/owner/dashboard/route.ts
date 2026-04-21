@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 
 import { db } from "@/db";
@@ -27,15 +27,6 @@ export async function GET(request: NextRequest) {
       })
       .from(bookings);
 
-    const latestBookings = await db.query.bookings.findMany({
-      with: {
-        unit: true,
-        user: true,
-      },
-      orderBy: [desc(bookings.createdAt)],
-      limit: 5,
-    });
-
     const unitsByType = await db
       .select({
         type: units.type,
@@ -45,17 +36,13 @@ export async function GET(request: NextRequest) {
       .from(units)
       .groupBy(units.type);
 
-    const pendingPaymentItems = await db.query.bookings.findMany({
-      where: and(
-        eq(bookings.status, "pending"),
-        eq(bookings.paymentMethod, "manual_transfer"),
-      ),
+    const ownerBookings = await db.query.bookings.findMany({
       with: {
         unit: true,
         user: true,
       },
       orderBy: [desc(bookings.createdAt)],
-      limit: 5,
+      limit: 20,
     });
 
     const managedUnits = await db.query.units.findMany({
@@ -75,9 +62,8 @@ export async function GET(request: NextRequest) {
           invoicesThisMonth: bookingSummary?.invoicesThisMonth ?? 0,
           totalUnits: unitSummary?.totalUnits ?? 0,
         },
-        latestBookings,
         unitsByType,
-        pendingPaymentItems,
+        ownerBookings,
         managedUnits: managedUnits.map((unit) => ({
           ...unit,
           facilities: parseJsonList(unit.facilities),

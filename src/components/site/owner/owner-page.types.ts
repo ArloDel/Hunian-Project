@@ -1,3 +1,22 @@
+type OwnerBookingItem = {
+  id: string;
+  bookingCode: string;
+  totalPrice: string;
+  checkInDate: string | Date;
+  createdAt: string | Date;
+  status: "pending" | "confirmed" | "cancelled" | "completed";
+  paymentMethod: "manual_transfer" | "xendit";
+  paymentStatus: "unpaid" | "proof_uploaded" | "verified" | "rejected" | "expired";
+  paymentProofUrl: string | null;
+  paymentProvider: string | null;
+  paymentUrl: string | null;
+  roomNumber: string | null;
+  paidAt: string | Date | null;
+  verifiedAt: string | Date | null;
+  unit: { name: string; location: string } | null;
+  user: { name: string; email: string } | null;
+};
+
 export type DashboardPayload = {
   summary: {
     activeTenants: number;
@@ -14,16 +33,7 @@ export type DashboardPayload = {
     total: number;
     available: number;
   }>;
-  pendingPaymentItems: Array<{
-    id: string;
-    bookingCode: string;
-    totalPrice: string;
-    checkInDate: string | Date;
-    paymentProofUrl: string | null;
-    paymentStatus: string;
-    unit: { name: string } | null;
-    user: { name: string } | null;
-  }>;
+  ownerBookings: OwnerBookingItem[];
   managedUnits: Array<{
     id: string;
     name: string;
