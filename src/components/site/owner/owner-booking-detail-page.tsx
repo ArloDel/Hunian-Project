@@ -1,15 +1,21 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarClock,
   CreditCard,
   FileImage,
   Home,
+  LoaderCircle,
   Mail,
   MapPin,
   Phone,
   ShieldCheck,
   Wallet,
+  XCircle,
 } from "lucide-react";
 
 import {
@@ -18,10 +24,12 @@ import {
   getOwnerPaymentMethodLabel,
   getOwnerPaymentStatusLabel,
 } from "@/components/site/owner/owner-booking-status";
+import { updateOwnerBooking } from "@/components/site/owner/owner-page.api";
 import { formatCurrency } from "@/components/site/owner/owner-page.utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import type { bookings } from "@/db/schema";
 
@@ -57,7 +65,32 @@ function formatDate(value: string | Date | null | undefined) {
 }
 
 export function OwnerBookingDetailPage({ booking }: OwnerBookingDetailPageProps) {
+  const router = useRouter();
+  const [roomNumber, setRoomNumber] = useState(booking.roomNumber ?? "");
+  const [message, setMessage] = useState("");
+  const [isPending, startTransition] = useTransition();
   const isXenditPending = booking.paymentMethod === "xendit" && booking.paymentStatus === "unpaid";
+  const canManualReview =
+    booking.paymentMethod === "manual_transfer" &&
+    (booking.paymentStatus === "proof_uploaded" || booking.paymentStatus === "rejected") &&
+    booking.status === "pending";
+
+  const handleManualAction = (action: "verified" | "rejected") => {
+    startTransition(async () => {
+      try {
+        setMessage("");
+        await updateOwnerBooking(booking.id, action, roomNumber);
+        setMessage(
+          action === "verified"
+            ? "Booking berhasil diverifikasi dari halaman detail."
+            : "Bukti transfer ditandai perlu perbaikan.",
+        );
+        router.refresh();
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Memperbarui booking gagal.");
+      }
+    });
+  };
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
@@ -88,6 +121,12 @@ export function OwnerBookingDetailPage({ booking }: OwnerBookingDetailPageProps)
           <Badge variant="outline">{getOwnerPaymentMethodLabel(booking.paymentMethod)}</Badge>
         </div>
       </div>
+
+      {message ? (
+        <Card className="rounded-[24px]">
+          <CardContent className="p-4 text-sm">{message}</CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_0.92fr]">
         <div className="grid gap-5">
@@ -216,6 +255,47 @@ export function OwnerBookingDetailPage({ booking }: OwnerBookingDetailPageProps)
                   </Button>
                 ) : null}
               </div>
+
+              {canManualReview ? (
+                <div className="space-y-3 rounded-[24px] border border-border bg-muted/40 p-4">
+                  <div className="space-y-1">
+                    <p className="font-medium">Aksi owner langsung</p>
+                    <p className="text-sm text-muted-foreground">
+                      Booking manual ini siap ditinjau. Isi nomor kamar bila ingin langsung
+                      mengonfirmasi hunian untuk tenant.
+                    </p>
+                  </div>
+                  <Input
+                    placeholder="Nomor kamar jika diverifikasi"
+                    value={roomNumber}
+                    onChange={(event) => setRoomNumber(event.target.value)}
+                    disabled={isPending}
+                  />
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button
+                      className="flex-1"
+                      onClick={() => handleManualAction("verified")}
+                      disabled={isPending}
+                    >
+                      {isPending ? (
+                        <LoaderCircle className="size-4 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="size-4" />
+                      )}
+                      Verify booking
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => handleManualAction("rejected")}
+                      disabled={isPending}
+                    >
+                      <XCircle className="size-4" />
+                      Tolak bukti transfer
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
               {(booking.paymentReference || booking.paymentExternalId || booking.paymentProvider) ? (
                 <div className="grid gap-3 rounded-[24px] bg-muted/60 p-4 text-sm">
