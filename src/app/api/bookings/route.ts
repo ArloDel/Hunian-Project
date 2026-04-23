@@ -4,6 +4,10 @@ import { type NextRequest } from "next/server";
 import { db } from "@/db";
 import { bookings, units } from "@/db/schema";
 import {
+  sendBookingCreatedEmail,
+  sendOwnerManualBookingAlert,
+} from "@/lib/booking-notifications";
+import {
   ApiError,
   getCurrentUserRecord,
   handleApiError,
@@ -137,6 +141,28 @@ export async function POST(request: NextRequest) {
       },
       limit: 1,
     });
+
+    if (created?.user?.email) {
+      const notificationContext = {
+        booking: created,
+        user: created.user,
+        unit: created.unit,
+      };
+
+      const notificationTasks = [sendBookingCreatedEmail(notificationContext)];
+
+      if (created.paymentMethod === "manual_transfer") {
+        notificationTasks.push(sendOwnerManualBookingAlert(notificationContext));
+      }
+
+      const results = await Promise.allSettled(notificationTasks);
+
+      results.forEach((result) => {
+        if (result.status === "rejected") {
+          console.error("[booking-notification] create booking email failed", result.reason);
+        }
+      });
+    }
 
     return json(
       {

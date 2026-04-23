@@ -14,6 +14,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   XENDIT_SECRET_KEY: z.string().default(""),
   XENDIT_WEBHOOK_TOKEN: z.string().default(""),
+  RESEND_API_KEY: z.string().default(""),
+  NOTIFICATION_FROM_EMAIL: z.string().email().default("Hunian Mahmudah <onboarding@resend.dev>"),
+  OWNER_NOTIFICATION_EMAIL: z.string().email().optional(),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

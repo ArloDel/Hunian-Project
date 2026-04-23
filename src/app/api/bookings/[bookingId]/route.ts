@@ -4,6 +4,10 @@ import { type NextRequest } from "next/server";
 import { db } from "@/db";
 import { bookings } from "@/db/schema";
 import {
+  sendBookingRejectedEmail,
+  sendBookingVerifiedEmail,
+} from "@/lib/booking-notifications";
+import {
   ApiError,
   getCurrentUserRecord,
   handleApiError,
@@ -98,6 +102,40 @@ export async function PATCH(
         updatedAt: new Date(),
       })
       .where(eq(bookings.id, bookingId));
+
+    const [updatedBooking] = await db.query.bookings.findMany({
+      where: eq(bookings.id, bookingId),
+      with: {
+        unit: true,
+        user: true,
+      },
+      limit: 1,
+    });
+
+    if (updatedBooking?.user?.email && role === "owner") {
+      const notificationContext = {
+        booking: updatedBooking,
+        user: updatedBooking.user,
+        unit: updatedBooking.unit,
+      };
+      const notificationTasks = [];
+
+      if (booking.paymentStatus !== "verified" && payload.paymentStatus === "verified") {
+        notificationTasks.push(sendBookingVerifiedEmail(notificationContext));
+      }
+
+      if (booking.paymentStatus !== "rejected" && payload.paymentStatus === "rejected") {
+        notificationTasks.push(sendBookingRejectedEmail(notificationContext));
+      }
+
+      const results = await Promise.allSettled(notificationTasks);
+
+      results.forEach((result) => {
+        if (result.status === "rejected") {
+          console.error("[booking-notification] update booking email failed", result.reason);
+        }
+      });
+    }
 
     return json({ message: "Booking berhasil diperbarui." });
   } catch (error) {

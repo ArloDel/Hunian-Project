@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 
 import { db } from "@/db";
 import { bookings, units } from "@/db/schema";
+import { sendPaymentSuccessEmail } from "@/lib/booking-notifications";
 import { handleApiError, json } from "@/lib/api";
 import { verifyXenditWebhook } from "@/lib/xendit";
 
@@ -24,17 +25,21 @@ export async function POST(request: NextRequest) {
       return json({ received: true, ignored: true });
     }
 
-    const [booking] = await db
-      .select()
-      .from(bookings)
-      .where(eq(bookings.paymentExternalId, externalId))
-      .limit(1);
+    const booking = await db.query.bookings.findFirst({
+      where: (table, { eq: equals }) => equals(table.paymentExternalId, externalId),
+      with: {
+        unit: true,
+        user: true,
+      },
+    });
 
     if (!booking) {
       return json({ received: true, ignored: true });
     }
 
     if (invoiceStatus === "PAID" || invoiceStatus === "SETTLED") {
+      const wasVerified = booking.paymentStatus === "verified";
+
       await db
         .update(bookings)
         .set({
@@ -47,6 +52,25 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         })
         .where(eq(bookings.id, booking.id));
+
+      if (!wasVerified && booking.user?.email) {
+        const result = await Promise.allSettled([
+          sendPaymentSuccessEmail({
+            booking: {
+              ...booking,
+              paymentStatus: "verified",
+            },
+            user: booking.user,
+            unit: booking.unit,
+          }),
+        ]);
+
+        result.forEach((entry) => {
+          if (entry.status === "rejected") {
+            console.error("[booking-notification] xendit payment email failed", entry.reason);
+          }
+        });
+      }
     }
 
     if (invoiceStatus === "EXPIRED") {
